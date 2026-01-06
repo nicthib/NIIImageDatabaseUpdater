@@ -12,23 +12,23 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("1. Distribution Chain File")
-    st.caption("Expected: Excel file (.xlsx) with columns: Material, St. Create using SQ00 --> Material --> GOVSINCODE --> DCHAIN NII RK (Divisions 31, 32, 36, 37, 38)")
+    st.caption("Expected: Excel file (.xlsx) with columns: Material, St")
     st.caption("Filter: Only materials where 'St' column is empty")
     dchain_file = st.file_uploader("Upload dchain.xlsx", type=['xlsx'], key='dchain')
 
     st.subheader("2. Images File")
-    st.caption("Expected: CSV file from Eric Flem (NII image database dataset) with columns: Part Number, Images")
+    st.caption("Expected: CSV file with columns: Part Number, Images")
     st.caption("Filter: Only parts where 'Images' column is <= 1")
     images_file = st.file_uploader("Upload images.csv", type=['csv'], key='images')
 
 with col2:
     st.subheader("3. Inventory File")
-    st.caption("Expected: Excel file (.xlsx) with columns: Material, Type, Description, StorLoc, Available. Create using SQ00 --> ZMM00091 --> Divisions 31, 32, 36, 37, 38 --> Plant 9100, 9300, SLoc (191, 9391")
+    st.caption("Expected: Excel file (.xlsx) with columns: Material, Type, Description, StorLoc, Available")
     st.caption("Filter: Available > 0 AND Type not in ['ZZIW', 'ZZOW']")
     inventory_file = st.file_uploader("Upload Inventory.xlsx", type=['xlsx'], key='inventory')
 
     st.subheader("4. Revenue File")
-    st.caption("Expected: Excel file (.xls) with Sheet1, header at row 39. Use BW --> Revenue Units & Dollars 7x")
+    st.caption("Expected: Excel file (.xls) with Sheet1, header at row 39")
     st.caption("Contains: Material and Units columns")
     revenue_file = st.file_uploader("Upload Revenue Units file", type=['xls', 'xlsx'], key='revenue')
 
@@ -84,9 +84,9 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
             result = result.merge(revenue_filtered, on='Material', how='left')
             st.success(f"✓ After adding revenue: {len(result)} materials")
 
-            # Add Image # from images
-            result = result.merge(images_filtered, on='Material', how='left')
-            st.success(f"✓ After adding images: {len(result)} materials")
+            # Add Image # from images (INNER join to only keep materials with Images <= 1)
+            result = result.merge(images_filtered, on='Material', how='inner')
+            st.success(f"✓ After adding images (Images <= 1): {len(result)} materials")
 
             # Consolidate StorLoc: if a material has both 9191 and 9391, set StorLoc to "BOTH"
             st.info("Consolidating StorLoc values...")
