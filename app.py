@@ -51,6 +51,10 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
             images_filtered.rename(columns={'Part Number': 'Material', 'Images': 'Image #'}, inplace=True)
             st.success(f"✓ images: {len(images_filtered)} parts with Images <= 1")
 
+            # Also keep track of materials with >1 images to exclude them
+            images_excluded = images[images['Images'] > 1]['Part Number'].astype(str).str.strip().tolist()
+            st.success(f"✓ images: {len(images_excluded)} parts with Images > 1 (to be excluded)")
+
             # 3. Read Inventory.xlsx - filter where Available > 0 AND Type not in ['ZZIW', 'ZZOW']
             inventory = pd.read_excel(inventory_file)
             inventory_filtered = inventory[
@@ -84,9 +88,18 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
             result = result.merge(revenue_filtered, on='Material', how='left')
             st.success(f"✓ After adding revenue: {len(result)} materials")
 
-            # Add Image # from images (INNER join to only keep materials with Images <= 1)
-            result = result.merge(images_filtered, on='Material', how='inner')
-            st.success(f"✓ After adding images (Images <= 1): {len(result)} materials")
+            # Add Image # from images
+            # Use LEFT join to keep all materials, then filter out those with >1 images
+            result = result.merge(images_filtered, on='Material', how='left')
+            st.success(f"✓ After adding images: {len(result)} materials")
+
+            # Exclude materials that are in images.csv with >1 images
+            result = result[~result['Material'].isin(images_excluded)]
+            st.success(f"✓ After excluding materials with >1 images: {len(result)} materials")
+
+            # Fill NaN Image # with 0 (materials not in images.csv have 0 images)
+            result['Image #'] = result['Image #'].fillna(0)
+            st.success(f"✓ Materials with image data filled: {len(result)} materials")
 
             # Consolidate StorLoc: if a material has both 9191 and 9391, set StorLoc to "BOTH"
             st.info("Consolidating StorLoc values...")
