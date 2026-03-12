@@ -23,8 +23,8 @@ with col1:
 
 with col2:
     st.subheader("3. Inventory File")
-    st.caption("Expected: Excel file (.xlsx) with columns: Material, Type, Description, StorLoc, Available")
-    st.caption("Filter: Available > 0 AND Type not in ['ZZIW', 'ZZOW']")
+    st.caption("Expected: Excel file (.xlsx) with columns: Material, Type, Description, StorLoc, Available, Back Orders")
+    st.caption("Filter: Available > 0 AND Type not in ['ZZIW', 'ZZOW'] AND Back Orders = 0")
     inventory_file = st.file_uploader("Upload Inventory.xlsx", type=['xlsx'], key='inventory')
 
     st.subheader("4. Revenue File")
@@ -59,9 +59,10 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
             inventory = pd.read_excel(inventory_file)
             inventory_filtered = inventory[
                 (inventory['Available'] > 0) &
-                (~inventory['Type'].isin(['ZZIW', 'ZZOW']))
+                (~inventory['Type'].isin(['ZZIW', 'ZZOW'])) &
+                (inventory['Back Orders'] == 0)
             ][['Material', 'Description', 'StorLoc']].copy()
-            st.success(f"✓ inventory: {len(inventory_filtered)} items with Available > 0 and Type not ZZIW/ZZOW")
+            st.success(f"✓ inventory: {len(inventory_filtered)} items with Available > 0, Type not ZZIW/ZZOW, and Back Orders = 0")
 
             # 4. Read Revenue file (Sheet1, header at row 38)
             revenue = pd.read_excel(revenue_file, sheet_name='Sheet1', header=38)
