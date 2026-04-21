@@ -117,7 +117,7 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
                     # Keep all rows as-is
                     return group
 
-            result = result.groupby('Material', group_keys=False).apply(consolidate_storloc).reset_index(drop=True)
+            result = result.groupby('Material', as_index=False).apply(consolidate_storloc).reset_index(drop=True)
             st.success(f"✓ After consolidating StorLoc: {len(result)} materials")
 
             # Reorder columns as requested
