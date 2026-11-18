@@ -57,12 +57,18 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
 
             # 3. Read Inventory.xlsx - filter where Available > 0 AND Type not in ['ZZIW', 'ZZOW']
             inventory = pd.read_excel(inventory_file)
-            inventory_filtered = inventory[
-                (inventory['Available'] > 0) &
-                (~inventory['Type'].isin(['ZZIW', 'ZZOW'])) &
-                # Blank Back Orders cells mean no back orders; treat them as 0
-                (pd.to_numeric(inventory['Back Orders'], errors='coerce').fillna(0) == 0)
-            ][['Material', 'Description', 'StorLoc']].copy()
+            available_ok = pd.to_numeric(inventory['Available'], errors='coerce') > 0
+            type_ok = ~inventory['Type'].isin(['ZZIW', 'ZZOW'])
+            # Blank Back Orders cells mean no back orders; treat them as 0
+            backorders_ok = pd.to_numeric(inventory['Back Orders'], errors='coerce').fillna(0) == 0
+            with st.expander(f"Inventory filter breakdown ({len(inventory)} rows in file)"):
+                st.write(f"- Available > 0: {available_ok.sum()} rows pass")
+                st.write(f"- Type not ZZIW/ZZOW: {type_ok.sum()} rows pass")
+                st.write(f"- Back Orders = 0 (blank counts as 0): {backorders_ok.sum()} rows pass")
+                st.write(f"- Available > 0 AND Type OK (ignoring Back Orders): {(available_ok & type_ok).sum()} rows")
+                st.write("Most common Back Orders values:")
+                st.write(inventory['Back Orders'].value_counts(dropna=False).head(10))
+            inventory_filtered = inventory[available_ok & type_ok & backorders_ok][['Material', 'Description', 'StorLoc']].copy()
             st.success(f"✓ inventory: {len(inventory_filtered)} items with Available > 0, Type not ZZIW/ZZOW, and Back Orders = 0")
 
             # 4. Read Revenue file (Sheet1, header at row 38)
@@ -74,6 +80,8 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
 
             # Convert all Material columns to string for consistent merging
             dchain_filtered['Material'] = dchain_filtered['Material'].astype(str).str.strip()
+            # dchain lists materials multiple times; dedupe so the merge doesn't duplicate rows
+            dchain_filtered = dchain_filtered.drop_duplicates(subset=['Material'])
             inventory_filtered['Material'] = inventory_filtered['Material'].astype(str).str.strip()
             images_filtered['Material'] = images_filtered['Material'].astype(str).str.strip()
 
