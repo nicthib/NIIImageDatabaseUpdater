@@ -60,7 +60,8 @@ if st.button("Process Files", type="primary", disabled=not all([dchain_file, ima
             inventory_filtered = inventory[
                 (inventory['Available'] > 0) &
                 (~inventory['Type'].isin(['ZZIW', 'ZZOW'])) &
-                (inventory['Back Orders'] == 0)
+                # Blank Back Orders cells mean no back orders; treat them as 0
+                (pd.to_numeric(inventory['Back Orders'], errors='coerce').fillna(0) == 0)
             ][['Material', 'Description', 'StorLoc']].copy()
             st.success(f"✓ inventory: {len(inventory_filtered)} items with Available > 0, Type not ZZIW/ZZOW, and Back Orders = 0")
 
