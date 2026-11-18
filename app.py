@@ -5,7 +5,7 @@ import io
 st.set_page_config(page_title="Material Data Filter", layout="wide")
 
 st.title("Material Data Filter & Merger")
-st.markdown("Upload your 4 data files to generate a filtered output file.")
+st.markdown("Upload your 4 data files to generate a filtered output file. (last fix 11/18/2026)")
 
 # Create columns for file uploaders
 col1, col2 = st.columns(2)
