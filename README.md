@@ -61,3 +61,17 @@ The app generates a file with the following columns:
 2. Click "Process Files"
 3. Review the preview and statistics
 4. Click "Download filtered_output.xlsx" to save the results
+
+## Troubleshooting
+
+**`ImportError: Import openpyxl failed` on Streamlit Community Cloud**
+
+Streamlit Cloud runs Python 3.13. Older pinned versions (e.g. `pandas==2.2.2`,
+`streamlit==1.33.0`, which needs `numpy<2`) have no Python 3.13 wheels, so the
+`requirements.txt` install fails and Streamlit Cloud silently falls back to
+installing only `streamlit` — which brings pandas but not openpyxl.
+
+Fix: keep `requirements.txt` on versions that support Python 3.13 (minimum
+versions instead of old exact pins), then **Reboot app** from the Streamlit
+Cloud "Manage app" menu. Alternatively, pick Python 3.11/3.12 under
+*Settings → Advanced settings* when deploying.
